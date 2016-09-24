@@ -1,24 +1,29 @@
 package com.crossover.trial.weather;
 
-import com.crossover.trial.weather.exception.WeatherException;
-import com.crossover.trial.weather.model.AirportData;
-import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.model.DataPointType;
-import com.crossover.trial.weather.service.WeatherService;
-import com.crossover.trial.weather.util.WeatherConstant;
-import com.crossover.trial.weather.model.AtmosphericInformation;
-import com.google.gson.Gson;
-
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.crossover.trial.weather.RestWeatherQueryEndpoint.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import com.crossover.trial.weather.exception.WeatherException;
+import com.crossover.trial.weather.model.AirportData;
+import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.model.DataPoint;
+import com.crossover.trial.weather.model.DataPointType;
+import com.crossover.trial.weather.service.AirportService;
+import com.crossover.trial.weather.service.WeatherService;
+import com.crossover.trial.weather.util.WeatherConstant;
+import com.google.gson.Gson;
 
 /**
  * A REST implementation of the WeatherCollector API. Accessible only to airport weather collection
@@ -33,29 +38,30 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     
     /** Singleton pattern for Weather service class */
     static WeatherService weatherService = WeatherService.INSTANCE;
+    static AirportService airportService = AirportService.INSTANCE;
 
     /** shared gson json to object factory */
     public final static Gson gson = new Gson();
     
     /** all known airports */
-    private static List<AirportData> airportData = weatherService.getAirportData();
+    private  List<AirportData> airportData = weatherService.getAirportData();
 
-    /** atmospheric information for each airport, idx corresponds with airportData */
-    private static List<AtmosphericInformation> atmosphericInformation = weatherService.getAtmosphericInformation();
-    
-
+    @GET
+    @Path("/ping")
     @Override
     public Response ping() {
     	LOGGER.log(Level.INFO, "call to collector ping method");
         return Response.status(Response.Status.OK).entity("ready").build();
     }
 
+    @POST
+    @Path("/weather/{iata}/{pointType}")
     @Override
     public Response updateWeather(@PathParam("iata") String iataCode,
                                   @PathParam("pointType") String pointType,
                                   String datapointJson) {
         try {
-            addDataPoint(iataCode, pointType, gson.fromJson(datapointJson, DataPoint.class));
+        	airportService.addDataPoint(iataCode, pointType, gson.fromJson(datapointJson, DataPoint.class));
             return Response.status(Response.Status.OK).build();
         } catch (WeatherException e) {
         	LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -68,7 +74,9 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
         
     }
 
-
+    @GET
+    @Path("/airports")
+    @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Response getAirports() {
         Set<String> retval = null;
@@ -89,6 +97,9 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     }
 
 
+    @GET
+    @Path("/airport/{iata}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Response getAirport(@PathParam("iata") String iata) {
         AirportData ad = weatherService.findAirportData(iata);
@@ -103,13 +114,14 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
         
     }
 
-
+    @POST
+    @Path("/airport/{iata}/{lat}/{long}")
     @Override
     public Response addAirport(@PathParam("iata") String iata,
                                @PathParam("lat") String latString,
                                @PathParam("long") String longString) {
     	try{
-    		addAirport(iata, Double.valueOf(latString), Double.valueOf(longString));
+    		airportService.addAirport(iata, Double.valueOf(latString), Double.valueOf(longString));
     		LOGGER.log(Level.INFO, "Airport data added successfully");
     		return Response.status(Response.Status.CREATED).build();
     	}catch (Exception e) {
@@ -119,11 +131,15 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     }
 
 
+    @DELETE
+    @Path("/airport/{iata}")
     @Override
     public Response deleteAirport(@PathParam("iata") String iata) {
         return Response.status(Response.Status.NOT_IMPLEMENTED).build();
     }
 
+    @GET
+    @Path("/exit")
     @Override
     public Response exit() {
         System.exit(0);
@@ -133,7 +149,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     // Internal support methods
     //
 
-    /**
+   /* *//**
      * Update the airports weather data with the collected data.
      *
      * @param iataCode the 3 letter IATA code
@@ -141,7 +157,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
      * @param dp a datapoint object holding pointType data
      *
      * @throws WeatherException if the update can not be completed
-     */
+     *//*
     public void addDataPoint(String iataCode, String pointType, DataPoint dp) throws WeatherException {
     	try{
 	        int airportDataIdx = weatherService.getAirportDataIdx(iataCode);
@@ -157,13 +173,13 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
         }
     }
 
-    /**
+    *//**
      * update atmospheric information with the given data point for the given point type
      *
      * @param ai the atmospheric information object to update
      * @param pointType the data point type as a string
      * @param dp the actual data point
-     */
+     *//*
     public void updateAtmosphericInformation(AtmosphericInformation ai, String pointType, DataPoint dp) throws WeatherException,Exception {
         final DataPointType dptype = DataPointType.valueOf(pointType.toUpperCase());
 
@@ -217,7 +233,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
         
     }
 
-    /**
+    *//**
      * Add a new known airport to our list.
      *
      * @param iataCode 3 letter code
@@ -226,7 +242,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
      *
      * @return the added airport
      * @throws WeatherException 
-     */
+     *//*
     public static AirportData addAirport(String iataCode, double latitude, double longitude) throws WeatherException {
         AirportData ad = new AirportData();
         try {
@@ -240,5 +256,5 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 			throw new WeatherException("Exception while adding the Airport data");
 		}
         return ad;
-    }
+    }*/
 }

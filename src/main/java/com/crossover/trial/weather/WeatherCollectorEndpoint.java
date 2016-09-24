@@ -16,8 +16,7 @@ public interface WeatherCollectorEndpoint {
      *
      * @return 1 if the endpoint is alive functioning, 0 otherwise
      */
-    @GET
-    @Path("/ping")
+   
     Response ping();
 
     /**
@@ -30,8 +29,7 @@ public interface WeatherCollectorEndpoint {
      *
      * @return HTTP Response code
      */
-    @POST
-    @Path("/weather/{iata}/{pointType}")
+    
     Response updateWeather(@PathParam("iata") String iataCode,
                            @PathParam("pointType") String pointType,
                            String datapointJson);
@@ -41,9 +39,7 @@ public interface WeatherCollectorEndpoint {
      *
      * @return HTTP Response code and a json formatted list of IATA codes
      */
-    @GET
-    @Path("/airports")
-    @Produces(MediaType.APPLICATION_JSON)
+    
     Response getAirports();
 
     /**
@@ -52,9 +48,7 @@ public interface WeatherCollectorEndpoint {
      * @param iata the 3 letter airport code
      * @return an HTTP Response with a json representation of {@link AirportData}
      */
-    @GET
-    @Path("/airport/{iata}")
-    @Produces(MediaType.APPLICATION_JSON)
+    
     Response getAirport(@PathParam("iata") String iata);
 
     /**
@@ -65,8 +59,7 @@ public interface WeatherCollectorEndpoint {
      * @param longString the airport's longitude in degrees as a string [-180, 180]
      * @return HTTP Response code for the add operation
      */
-    @POST
-    @Path("/airport/{iata}/{lat}/{long}")
+    
     Response addAirport(@PathParam("iata") String iata,
                         @PathParam("lat") String latString,
                         @PathParam("long") String longString);
@@ -77,11 +70,9 @@ public interface WeatherCollectorEndpoint {
      * @param iata the 3 letter airport code
      * @return HTTP Repsonse code for the delete operation
      */
-    @DELETE
-    @Path("/airport/{iata}")
+   
     Response deleteAirport(@PathParam("iata") String iata);
 
-    @GET
-    @Path("/exit")
+    
     Response exit();
 }

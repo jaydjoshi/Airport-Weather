@@ -7,7 +7,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.exception.WeatherException;
@@ -64,6 +67,8 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      *
      * @return health stats for the service as a string
      */
+    @GET
+    @Path("/ping")
     @Override
     public String ping() {
         Map<String, Object> retval = new HashMap<String, Object>();
@@ -117,6 +122,9 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      *
      * @return a list of atmospheric information
      */
+    @GET
+    @Path("/weather/{iata}/{radius}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Response weather(String iata, String radiusString) {
     	

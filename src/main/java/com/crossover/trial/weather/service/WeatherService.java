@@ -3,8 +3,10 @@
  */
 package com.crossover.trial.weather.service;
 
-import static com.crossover.trial.weather.RestWeatherCollectorEndpoint.addAirport;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -163,11 +165,36 @@ public enum WeatherService {
         requestFrequency.clear();
 
        try {
-			addAirport("BOS", 42.364347, -71.005181);
-			addAirport("EWR", 40.6925, -74.168667);
-			addAirport("JFK", 40.639751, -73.778925);
-			addAirport("LGA", 40.777245, -73.872608);
-			addAirport("MMU", 40.79935, -74.4148747);
+			AirportService.INSTANCE.addAirport("BOS", 42.364347, -71.005181);
+			AirportService.INSTANCE.addAirport("EWR", 40.6925, -74.168667);
+			AirportService.INSTANCE.addAirport("JFK", 40.639751, -73.778925);
+			AirportService.INSTANCE.addAirport("LGA", 40.777245, -73.872608);
+			AirportService.INSTANCE.addAirport("MMU", 40.79935, -74.4148747);
+		} catch (WeatherException e) {
+			throw new WeatherException(e);
+		}
+    }
+    
+    
+    public void initFromFile() throws WeatherException {
+        getAirportData().clear();
+        getAtmosphericInformation().clear();
+        getRequestFrequency().clear();
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("airports.dat");
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String l = null;
+
+        try {
+            while ( (l = br.readLine()) != null) {
+                String[] split = l.split(",");
+                AirportService.INSTANCE.addAirport(split[0],
+                        Double.valueOf(split[1]),
+                        Double.valueOf(split[2]));
+            }
+        } catch (IOException e) {
+        	throw new WeatherException(e);
+        } catch (NumberFormatException e) {
+        	throw new WeatherException(e);
 		} catch (WeatherException e) {
 			throw new WeatherException(e);
 		}
