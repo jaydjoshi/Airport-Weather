@@ -49,7 +49,7 @@ public class WeatherClient {
         System.out.println("query.ping: " + response.readEntity(String.class));
     }
 
-    public void populate(String pointType, int first, int last, int mean, int median, int count) {
+    public void populate(String pointType, double first, double last, double mean, double median, double count) {
         WebTarget path = collect.path("/weather/BOS/" + pointType);
         DataPoint dp = new DataPoint.Builder()
                 .withFirst(first).withLast(last).withMean(mean).withMedian(median).withCount(count)
