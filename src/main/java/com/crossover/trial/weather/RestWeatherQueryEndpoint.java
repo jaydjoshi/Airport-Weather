@@ -19,7 +19,6 @@ import static com.crossover.trial.weather.RestWeatherCollectorEndpoint.addAirpor
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
-    
 
     /** earth radius in KM */
     public static final double R = 6372.8;
