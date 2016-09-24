@@ -25,6 +25,11 @@ public class WeatherException extends Exception {
     	super(cause);
     	this.dataPointType=null;
     }
+    
+    public WeatherException(String message){
+    	super(message);
+    	this.dataPointType=null;
+    }
 
 	public WeatherException(DataPointType dataPointType, String message) {
 		super(message);
@@ -42,7 +47,7 @@ public class WeatherException extends Exception {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " for data type :" + dataPointType.name();
+		return super.getMessage() + " for data type " + dataPointType.name();
 	}
 
 

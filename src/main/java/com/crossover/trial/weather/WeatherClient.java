@@ -6,6 +6,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import com.crossover.trial.weather.model.DataPoint;
+
 /**
  * A reference implementation for the weather client. Consumers of the REST API can look at WeatherClient
  * to understand API semantics. This existing client populates the REST endpoint with dummy data useful for
@@ -53,6 +55,7 @@ public class WeatherClient {
                 .withFirst(first).withLast(last).withMean(mean).withMedian(median).withCount(count)
                 .build();
         Response post = path.request().post(Entity.entity(dp, "application/json"));
+        System.out.println("data populated");
     }
 
     public void exit() {
@@ -66,17 +69,19 @@ public class WeatherClient {
     public static void main(String[] args) {
         WeatherClient wc = new WeatherClient();
         wc.pingCollect();
-        wc.populate("wind", 0, 10, 6, 4, 20);
+        //populate the data
+        wc.populate("wind", 1, 10, 6, 4, 20);
 
         wc.query("BOS");
+        
         wc.query("JFK");
         wc.query("EWR");
         wc.query("LGA");
         wc.query("MMU");
 
         wc.pingQuery();
-        wc.exit();
+        //wc.exit();
         System.out.print("complete");
-        System.exit(0);
+        //System.exit(0);
     }
 }

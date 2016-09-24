@@ -19,9 +19,18 @@ public class AirportData {
     /** longitude value in degrees */
     private double longitude;
 
-    public AirportData() { }
+    public AirportData() {
+    	super();
+    }
+    
+    public AirportData(String iata, double latitude, double longitude) {
+		super();
+		this.iata = iata;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
 
-    public String getIata() {
+	public String getIata() {
         return iata;
     }
 

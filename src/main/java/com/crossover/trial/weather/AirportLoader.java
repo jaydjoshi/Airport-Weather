@@ -3,6 +3,9 @@ package com.crossover.trial.weather;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+
+import com.crossover.trial.weather.util.WeatherConstant;
+
 import java.io.*;
 
 /**
@@ -22,8 +25,8 @@ public class AirportLoader {
 
     public AirportLoader() {
         Client client = ClientBuilder.newClient();
-        query = client.target("http://localhost:8080/query");
-        collect = client.target("http://localhost:8080/collect");
+        query = client.target(WeatherConstant.QUERY_URL);
+        collect = client.target(WeatherConstant.COLLECT_URL);
     }
 
     public void upload(InputStream airportDataStream) throws IOException{

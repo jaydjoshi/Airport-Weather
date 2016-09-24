@@ -7,13 +7,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.service.WeatherService;
 import com.google.gson.Gson;
 
 /**
@@ -25,7 +28,10 @@ import com.google.gson.Gson;
 @Path("/query")
 public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
-    public final static Logger LOGGER = Logger.getLogger("WeatherQuery");
+    public final static Logger LOGGER = Logger.getLogger(RestWeatherQueryEndpoint.class.getName());
+    
+    //get instance of Service class
+    static WeatherService weatherService = WeatherService.INSTANCE;
 
     /** earth radius in KM */
     public static final double R = 6372.8;
@@ -34,7 +40,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public static final Gson gson = new Gson();
 
     /** all known airports */
-    protected static List<AirportData> airportData = new ArrayList<>();
+    protected static List<AirportData> airportData = new ArrayList<AirportData>();
 
     /** atmospheric information for each airport, idx corresponds with airportData */
     protected static List<AtmosphericInformation> atmosphericInformation = new LinkedList<AtmosphericInformation>();
@@ -50,7 +56,11 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public static Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
 
     static {
-        init();
+        try {
+        	weatherService.init();
+		} catch (WeatherException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
     }
     /**
      * Retrieve service health including total size of valid data points and request frequency information.
@@ -59,8 +69,9 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      */
     @Override
     public String ping() {
-        Map<String, Object> retval = new HashMap<>();
-
+        Map<String, Object> retval = new HashMap<String, Object>();
+        LOGGER.log(Level.INFO, "call to query ping method");
+        
         int datasize = 0;
         for (AtmosphericInformation ai : atmosphericInformation) {
             // we only count recent readings
@@ -111,10 +122,19 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      */
     @Override
     public Response weather(String iata, String radiusString) {
+    	
+    	//check if airport exists
+    	AirportData airport = findAirportData(iata);
+        if (airport == null) {
+        	LOGGER.log(Level.INFO, "call to query weather method returned no airport data for "+iata);
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    	
         double radius = radiusString == null || radiusString.trim().isEmpty() ? 0 : Double.valueOf(radiusString);
         updateRequestFrequency(iata, radius);
 
-        List<AtmosphericInformation> retval = new ArrayList<>();
+        List<AtmosphericInformation> retval = new ArrayList<AtmosphericInformation>();
+        
         if (radius == 0) {
             int idx = getAirportDataIdx(iata);
             retval.add(atmosphericInformation.get(idx));
@@ -130,7 +150,15 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
                 }
             }
         }
-        return Response.status(Response.Status.OK).entity(retval).build();
+        
+        if(retval!=null && retval.size()>0){
+	        LOGGER.log(Level.INFO, "call to query weather method returned details for "+iata);
+	        return Response.status(Response.Status.OK).entity(retval).build();
+        }
+        else{
+        	LOGGER.log(Level.INFO, "call to query weather method returned no results");
+	        return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
 
@@ -187,17 +215,22 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     /**
      * A dummy init method that loads hard coded data
+     * @throws WeatherException 
      */
-    protected static void init() {
+    protected static void init() throws WeatherException {
         airportData.clear();
         atmosphericInformation.clear();
         requestFrequency.clear();
 
-        addAirport("BOS", 42.364347, -71.005181);
-        addAirport("EWR", 40.6925, -74.168667);
-        addAirport("JFK", 40.639751, -73.778925);
-        addAirport("LGA", 40.777245, -73.872608);
-        addAirport("MMU", 40.79935, -74.4148747);
+       try {
+			addAirport("BOS", 42.364347, -71.005181);
+			addAirport("EWR", 40.6925, -74.168667);
+			addAirport("JFK", 40.639751, -73.778925);
+			addAirport("LGA", 40.777245, -73.872608);
+			addAirport("MMU", 40.79935, -74.4148747);
+		} catch (WeatherException e) {
+			throw new WeatherException(e);
+		}
     }
 
 }
