@@ -20,6 +20,11 @@ public class WeatherException extends Exception {
     	super();
     	this.dataPointType=null;
 	}
+    
+    public WeatherException(Throwable cause){
+    	super(cause);
+    	this.dataPointType=null;
+    }
 
 	public WeatherException(DataPointType dataPointType, String message) {
 		super(message);
