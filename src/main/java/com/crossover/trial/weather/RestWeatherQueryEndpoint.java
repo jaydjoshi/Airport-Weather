@@ -1,10 +1,7 @@
 package com.crossover.trial.weather;
 
-import static com.crossover.trial.weather.RestWeatherCollectorEndpoint.addAirport;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -30,20 +27,19 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
 
     public final static Logger LOGGER = Logger.getLogger(RestWeatherQueryEndpoint.class.getName());
     
-    //get instance of Service class
+    /** Singleton pattern for Weather service class
+     */
     static WeatherService weatherService = WeatherService.INSTANCE;
-
-    /** earth radius in KM */
-    public static final double R = 6372.8;
 
     /** shared gson json to object factory */
     public static final Gson gson = new Gson();
-
+    
+    
     /** all known airports */
-    protected static List<AirportData> airportData = new ArrayList<AirportData>();
+    private List<AirportData> airportData = weatherService.getAirportData();
 
     /** atmospheric information for each airport, idx corresponds with airportData */
-    protected static List<AtmosphericInformation> atmosphericInformation = new LinkedList<AtmosphericInformation>();
+    private List<AtmosphericInformation> atmosphericInformation = weatherService.getAtmosphericInformation();
 
     /**
      * Internal performance counter to better understand most requested information, this map can be improved but
@@ -51,10 +47,11 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
      * we don't want to write this to disk, but will pull it off using a REST request and aggregate with other
      * performance metrics {@link #ping()}
      */
-    public static Map<AirportData, Integer> requestFrequency = new HashMap<AirportData, Integer>();
+    private Map<AirportData, Integer> requestFrequency = weatherService.getRequestFrequency();
 
-    public static Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
+    private Map<Double, Integer> radiusFreq = weatherService.getRadiusFreq();
 
+  
     static {
         try {
         	weatherService.init();
@@ -89,7 +86,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
         }
         retval.put("datasize", datasize);
 
-        Map<String, Double> freq = new HashMap<>();
+        Map<String, Double> freq = new HashMap<String, Double>();
         // fraction of queries
         for (AirportData data : airportData) {
             double frac = (double)requestFrequency.getOrDefault(data, 0) / requestFrequency.size();
@@ -124,24 +121,24 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     public Response weather(String iata, String radiusString) {
     	
     	//check if airport exists
-    	AirportData airport = findAirportData(iata);
+    	AirportData airport = weatherService.findAirportData(iata);
         if (airport == null) {
         	LOGGER.log(Level.INFO, "call to query weather method returned no airport data for "+iata);
             return Response.status(Response.Status.NOT_FOUND).build();
         }
     	
         double radius = radiusString == null || radiusString.trim().isEmpty() ? 0 : Double.valueOf(radiusString);
-        updateRequestFrequency(iata, radius);
+        weatherService.updateRequestFrequency(iata, radius);
 
         List<AtmosphericInformation> retval = new ArrayList<AtmosphericInformation>();
         
         if (radius == 0) {
-            int idx = getAirportDataIdx(iata);
-            retval.add(atmosphericInformation.get(idx));
+            int idx = weatherService.getAirportDataIdx(iata);
+            retval.add(weatherService.getAtmosphericInformation().get(idx));
         } else {
-            AirportData ad = findAirportData(iata);
+            AirportData ad = weatherService.findAirportData(iata);
             for (int i=0;i< airportData.size(); i++){
-                if (calculateDistance(ad, airportData.get(i)) <= radius){
+                if (weatherService.calculateDistance(ad, airportData.get(i)) <= radius){
                     AtmosphericInformation ai = atmosphericInformation.get(i);
                     if (ai.getCloudCover() != null || ai.getHumidity() != null || ai.getPrecipitation() != null
                        || ai.getPressure() != null || ai.getTemperature() != null || ai.getWind() != null){
@@ -161,76 +158,5 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
         }
     }
 
-
-    /**
-     * Records information about how often requests are made
-     *
-     * @param iata an iata code
-     * @param radius query radius
-     */
-    public void updateRequestFrequency(String iata, Double radius) {
-        AirportData airportData = findAirportData(iata);
-        requestFrequency.put(airportData, requestFrequency.getOrDefault(airportData, 0) + 1);
-        radiusFreq.put(radius, radiusFreq.getOrDefault(radius, 0));
-    }
-
-    /**
-     * Given an iataCode find the airport data
-     *
-     * @param iataCode as a string
-     * @return airport data or null if not found
-     */
-    public static AirportData findAirportData(String iataCode) {
-        return airportData.stream()
-            .filter(ap -> ap.getIata().equals(iataCode))
-            .findFirst().orElse(null);
-    }
-
-    /**
-     * Given an iataCode find the airport data
-     *
-     * @param iataCode as a string
-     * @return airport data or null if not found
-     */
-    public static int getAirportDataIdx(String iataCode) {
-        AirportData ad = findAirportData(iataCode);
-        return airportData.indexOf(ad);
-    }
-
-    /**
-     * Haversine distance between two airports.
-     *
-     * @param ad1 airport 1
-     * @param ad2 airport 2
-     * @return the distance in KM
-     */
-    public double calculateDistance(AirportData ad1, AirportData ad2) {
-        double deltaLat = Math.toRadians(ad2.getLatitude() - ad1.getLatitude());
-        double deltaLon = Math.toRadians(ad2.getLongitude() - ad1.getLongitude());
-        double a =  Math.pow(Math.sin(deltaLat / 2), 2) + Math.pow(Math.sin(deltaLon / 2), 2)
-                * Math.cos(ad1.getLatitude()) * Math.cos(ad2.getLatitude());
-        double c = 2 * Math.asin(Math.sqrt(a));
-        return R * c;
-    }
-
-    /**
-     * A dummy init method that loads hard coded data
-     * @throws WeatherException 
-     */
-    protected static void init() throws WeatherException {
-        airportData.clear();
-        atmosphericInformation.clear();
-        requestFrequency.clear();
-
-       try {
-			addAirport("BOS", 42.364347, -71.005181);
-			addAirport("EWR", 40.6925, -74.168667);
-			addAirport("JFK", 40.639751, -73.778925);
-			addAirport("LGA", 40.777245, -73.872608);
-			addAirport("MMU", 40.79935, -74.4148747);
-		} catch (WeatherException e) {
-			throw new WeatherException(e);
-		}
-    }
 
 }

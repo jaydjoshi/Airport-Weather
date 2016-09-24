@@ -13,6 +13,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,11 +31,18 @@ import static com.crossover.trial.weather.RestWeatherQueryEndpoint.*;
 public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     public final static Logger LOGGER = Logger.getLogger(RestWeatherCollectorEndpoint.class.getName());
     
-    //get instance of Service class
+    /** Singleton pattern for Weather service class */
     static WeatherService weatherService = WeatherService.INSTANCE;
 
     /** shared gson json to object factory */
     public final static Gson gson = new Gson();
+    
+    /** all known airports */
+    private static List<AirportData> airportData = weatherService.getAirportData();
+
+    /** atmospheric information for each airport, idx corresponds with airportData */
+    private static List<AtmosphericInformation> atmosphericInformation = weatherService.getAtmosphericInformation();
+    
 
     @Override
     public Response ping() {
@@ -83,7 +91,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
 
     @Override
     public Response getAirport(@PathParam("iata") String iata) {
-        AirportData ad = findAirportData(iata);
+        AirportData ad = weatherService.findAirportData(iata);
         if(ad!=null ){
         	LOGGER.log(Level.INFO, "Airport data for "+iata+" found");
         	return Response.status(Response.Status.OK).entity(ad).build();
@@ -136,7 +144,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
      */
     public void addDataPoint(String iataCode, String pointType, DataPoint dp) throws WeatherException {
     	try{
-	        int airportDataIdx = getAirportDataIdx(iataCode);
+	        int airportDataIdx = weatherService.getAirportDataIdx(iataCode);
 	        AtmosphericInformation ai = atmosphericInformation.get(airportDataIdx);
 	        updateAtmosphericInformation(ai, pointType, dp);
 	    }catch (WeatherException e) {
@@ -223,7 +231,6 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
         AirportData ad = new AirportData();
         try {
 			airportData.add(ad);
-
 			AtmosphericInformation ai = new AtmosphericInformation();
 			atmosphericInformation.add(ai);
 			ad.setIata(iataCode);
