@@ -7,7 +7,7 @@ import java.text.DecimalFormat;
 
 /**
  * @author jdhirendrajoshi
- *
+ * Airport model class to store values from the dat file
  */
 public class Airport {
 	
@@ -163,6 +163,11 @@ public class Airport {
 		this.dst = dst;
 	}
 	
+	/**
+	 * 
+	 * @param string
+	 * @return string without quotes
+	 */
 	String trimQuotes(String string){
 		if(string!=null){
 			string = string.replaceAll("^\"|\"$", "");

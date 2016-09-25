@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.service.AirportService;
 import com.crossover.trial.weather.service.WeatherService;
 import com.google.gson.Gson;
 
@@ -35,7 +34,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     
     /** Singleton pattern for Weather and Airport service class */
     static WeatherService weatherService = WeatherService.INSTANCE;
-    static AirportService airportService = AirportService.INSTANCE;
+    
 
     /** shared gson json to object factory */
     public final static Gson gson = new Gson();
@@ -59,7 +58,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
                                   @PathParam("pointType") String pointType,
                                   String datapointJson) {
         try {
-        	airportService.addDataPoint(iataCode, pointType, gson.fromJson(datapointJson, DataPoint.class));
+        	weatherService.addDataPoint(iataCode, pointType, gson.fromJson(datapointJson, DataPoint.class));
             return Response.status(Response.Status.OK).build();
         } catch (WeatherException e) {
         	LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -119,7 +118,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
                                @PathParam("lat") String latString,
                                @PathParam("long") String longString) {
     	try{
-    		airportService.addAirport(iata, Double.valueOf(latString), Double.valueOf(longString));
+    		weatherService.addAirport(iata, Double.valueOf(latString), Double.valueOf(longString));
     		System.out.println("Added airport: "+iata +" size: "+airportData.size());
     		LOGGER.log(Level.INFO, "Airport data added successfully");
     		return Response.status(Response.Status.CREATED).build();
@@ -135,7 +134,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     @Override
     public Response deleteAirport(@PathParam("iata") String iata) {
     	try {
-            boolean deleted = airportService.deleteAirport(iata);
+            boolean deleted = weatherService.deleteAirport(iata);
             return Response.status(deleted ? Response.Status.OK : Response.Status.NOT_FOUND).build();
         } catch (NumberFormatException e){
             LOGGER.log(Level.SEVERE, e.getMessage(), e);

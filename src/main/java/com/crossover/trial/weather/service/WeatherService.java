@@ -17,6 +17,9 @@ import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.Airport;
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
+import com.crossover.trial.weather.model.DataPoint;
+import com.crossover.trial.weather.model.DataPointType;
+import com.crossover.trial.weather.util.WeatherConstant;
 
 /**
  * @author jdhirendrajoshi
@@ -163,11 +166,11 @@ public enum WeatherService {
         requestFrequency.clear();
 
        try {
-			AirportService.INSTANCE.addAirport("BOS", 42.364347, -71.005181);
-			AirportService.INSTANCE.addAirport("EWR", 40.6925, -74.168667);
-			AirportService.INSTANCE.addAirport("JFK", 40.639751, -73.778925);
-			AirportService.INSTANCE.addAirport("LGA", 40.777245, -73.872608);
-			AirportService.INSTANCE.addAirport("MMU", 40.79935, -74.4148747);
+			addAirport("BOS", 42.364347, -71.005181);
+			addAirport("EWR", 40.6925, -74.168667);
+			addAirport("JFK", 40.639751, -73.778925);
+			addAirport("LGA", 40.777245, -73.872608);
+			addAirport("MMU", 40.79935, -74.4148747);
 		} catch (WeatherException e) {
 			throw new WeatherException(e);
 		}
@@ -215,7 +218,7 @@ public enum WeatherService {
         	populateAirportData(strArr,airport);	
         	
         	try {
-				AirportService.INSTANCE.addAirport(airport.getIata(),Double.valueOf(airport.getLatitude()),Double.valueOf(airport.getLongitude()));
+				addAirport(airport.getIata(),Double.valueOf(airport.getLatitude()),Double.valueOf(airport.getLongitude()));
 			} catch (NumberFormatException | WeatherException e) {
 				// TODO Auto-generated catch block
 				throw new WeatherException(e);
@@ -243,4 +246,132 @@ public enum WeatherService {
     	
 		return;
 	}
+    
+    /**
+     * Update the airports weather data with the collected data.
+     *
+     * @param iataCode the 3 letter IATA code
+     * @param pointType the point type {@link DataPointType}
+     * @param dp a datapoint object holding pointType data
+     *
+     * @throws WeatherException if the update can not be completed
+     */
+    public void addDataPoint(String iataCode, String pointType, DataPoint dp) throws WeatherException {
+    	try{
+	        int airportDataIdx = WeatherService.INSTANCE.getAirportDataIdx(iataCode);
+	        if(null != atmosphericInformation && atmosphericInformation.size()>0)
+	        {
+		        AtmosphericInformation ai = atmosphericInformation.get(airportDataIdx);
+		        updateAtmosphericInformation(ai, pointType, dp);
+	        }
+	    }catch (WeatherException e) {
+        	//LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new WeatherException(DataPointType.valueOf(pointType.toUpperCase()), e.getMessage(), e);
+        }
+        catch (Exception e) {
+        	//LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        	throw new WeatherException(DataPointType.valueOf(pointType.toUpperCase()), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * update atmospheric information with the given data point for the given point type
+     *
+     * @param ai the atmospheric information object to update
+     * @param pointType the data point type as a string
+     * @param dp the actual data point
+     */
+    public void updateAtmosphericInformation(AtmosphericInformation ai, String pointType, DataPoint dp) throws WeatherException,Exception {
+        final DataPointType dptype = DataPointType.valueOf(pointType.toUpperCase());
+
+		switch (dptype) {
+			case WIND:
+				if (dp.getMean() >= WeatherConstant.WIND_LOWER_LIMIT) {
+	                ai.setWind(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			case TEMPERATURE:
+				if (dp.getMean() >= WeatherConstant.TEMPERATURE_LOWER_LIMIT && dp.getMean() < WeatherConstant.TEMPERATURE_UPPER_LIMIT) {
+	                ai.setTemperature(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			case HUMIDTY:
+				if (dp.getMean() >= WeatherConstant.HUMIDTY_LOWER_LIMIT && dp.getMean() < WeatherConstant.HUMIDTY_UPPER_LIMIT) {
+	                ai.setHumidity(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			case PRESSURE:
+				if (dp.getMean() >= WeatherConstant.PRESSURE_LOWER_LIMIT && dp.getMean() < WeatherConstant.PRESSURE_UPPER_LIMIT) {
+	                ai.setPressure(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			case CLOUDCOVER:
+				if (dp.getMean() >= WeatherConstant.CLOUDCOVER_LOWER_LIMIT && dp.getMean() < WeatherConstant.CLOUDCOVER_UPPER_LIMIT) {
+	                ai.setCloudCover(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			case PRECIPITATION:
+				if (dp.getMean() >= WeatherConstant.PRECIPITATION_LOWER_LIMIT && dp.getMean() < WeatherConstant.PRECIPITATION_UPPER_LIMIT) {
+	                ai.setPrecipitation(dp);
+	                ai.setLastUpdateTime(System.currentTimeMillis());
+	            }
+				break;
+				
+			default:
+				throw new WeatherException("couldn't update atmospheric data");
+		}
+        
+        
+    }
+
+    /**
+     * Add a new known airport to our list.
+     *
+     * @param iataCode 3 letter code
+     * @param latitude in degrees
+     * @param longitude in degrees
+     *
+     * @return the added airport
+     * @throws WeatherException 
+     */
+    public AirportData addAirport(String iataCode, double latitude, double longitude) throws WeatherException {
+        AirportData ad = new AirportData();
+        try {
+			airportData.add(ad);
+			AtmosphericInformation ai = new AtmosphericInformation();
+			atmosphericInformation.add(ai);
+			ad.setIata(iataCode);
+			ad.setLatitude(latitude);
+			ad.setLatitude(longitude);
+		} catch (Exception e) {
+			throw new WeatherException("Exception while adding the Airport data");
+		}
+        return ad;
+    }
+	
+    /**
+     * Remove airport from the list
+     *
+     * @param iataCode 3 letter code
+     * @param latitude in degrees
+     * @param longitude in degrees
+     *
+     */
+    public boolean deleteAirport(String iataCode) {
+        final AirportData airport = WeatherService.INSTANCE.findAirportData(iataCode);
+        if (airport == null) {
+            return false;
+        }
+        return airportData.remove(airport);
+    }
 }
