@@ -4,9 +4,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.model.DataPoint;
+import com.crossover.trial.weather.service.WeatherService;
 
 /**
  * A reference implementation for the weather client. Consumers of the REST API can look at WeatherClient
@@ -54,7 +56,7 @@ public class WeatherClient {
         DataPoint dp = new DataPoint.Builder()
                 .withFirst(first).withLast(last).withMean(mean).withMedian(median).withCount(count)
                 .build();
-        Response post = path.request().post(Entity.entity(dp, "application/json"));
+        Response post = path.request().post(Entity.entity(dp, MediaType.APPLICATION_JSON));
         System.out.println("data populated");
     }
 
@@ -80,8 +82,8 @@ public class WeatherClient {
         wc.query("MMU");
 
         wc.pingQuery();
-        //wc.exit();
+        wc.exit();
         System.out.print("complete");
-        //System.exit(0);
+        System.exit(0);
     }
 }

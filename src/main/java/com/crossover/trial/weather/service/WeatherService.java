@@ -13,7 +13,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+
+import com.crossover.trial.weather.AirportLoader;
 import com.crossover.trial.weather.exception.WeatherException;
+import com.crossover.trial.weather.model.Airport;
 import com.crossover.trial.weather.model.AirportData;
 import com.crossover.trial.weather.model.AtmosphericInformation;
 
@@ -173,27 +178,75 @@ public enum WeatherService {
     }
     
     
-    public void initFromFile() throws WeatherException {
-        getAirportData().clear();
-        getAtmosphericInformation().clear();
-        getRequestFrequency().clear();
-        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("airports.dat");
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        String l = null;
+    /*public void initFromFile() throws WeatherException {
+    	airportData.clear();
+    	atmosphericInformation.clear();
+    	requestFrequency.clear();
+        
+        //args = airports.dat
+        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("airports.dat");
+        
+        if(inputStream==null){
+        	System.err.println("File is not a valid input");
+            //System.exit(1);
+        }
 
         try {
-            while ( (l = br.readLine()) != null) {
-                String[] split = l.split(",");
-                AirportService.INSTANCE.addAirport(split[0],
-                        Double.valueOf(split[1]),
-                        Double.valueOf(split[2]));
-            }
-        } catch (IOException e) {
+			upload(inputStream);
+		} catch (IOException e) {
         	throw new WeatherException(e);
         } catch (NumberFormatException e) {
         	throw new WeatherException(e);
-		} catch (WeatherException e) {
+		} catch (Exception e) {
 			throw new WeatherException(e);
 		}
+        
+        //System.exit(0);
+        
+        
     }
+    
+    public void upload(InputStream airportDataStream) throws IOException, WeatherException{
+        BufferedReader reader = new BufferedReader(new InputStreamReader(airportDataStream));
+        String l = null;
+        String[] strArr = null;
+        Airport airport = null;
+        String path = null;
+        
+        while ((l = reader.readLine()) != null) {
+            //break;
+        	strArr = new String[11];
+        	airport = new Airport();
+        	strArr = l.split(",");
+        	populateAirportData(strArr,airport);	
+        	
+        	try {
+				AirportService.INSTANCE.addAirport(airport.getIata(),Double.valueOf(airport.getLatitude()),Double.valueOf(airport.getLongitude()));
+			} catch (NumberFormatException | WeatherException e) {
+				// TODO Auto-generated catch block
+				throw new WeatherException(e);
+			}
+        	
+	        
+        }
+    }
+
+    public void populateAirportData(String[] strArr, Airport airport) {
+		// TODO Auto-generated method stub
+    	if(strArr==null || strArr.length==0)
+    		return;
+    	
+    	airport.setAirportName(strArr[1]);
+    	airport.setCity(strArr[2]);
+    	airport.setCountry(strArr[3]);
+    	airport.setIata(strArr[4]);
+    	airport.setIcao(strArr[5]);
+    	airport.setLatitude(strArr[6]);
+    	airport.setLongitude(strArr[7]);
+    	airport.setAltitude(Double.valueOf(strArr[8]));
+    	airport.setTimezone(Float.valueOf(strArr[9]));
+    	airport.setDst(strArr[10]);
+    	
+		return;
+	}*/
 }

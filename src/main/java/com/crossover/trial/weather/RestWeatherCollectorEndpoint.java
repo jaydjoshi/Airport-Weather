@@ -123,6 +123,7 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
                                @PathParam("long") String longString) {
     	try{
     		airportService.addAirport(iata, Double.valueOf(latString), Double.valueOf(longString));
+    		System.out.println("Added airport: "+iata +" size: "+airportData.size());
     		LOGGER.log(Level.INFO, "Airport data added successfully");
     		return Response.status(Response.Status.CREATED).build();
     	}catch (Exception e) {
@@ -136,7 +137,13 @@ public class RestWeatherCollectorEndpoint implements WeatherCollectorEndpoint {
     @Path("/airport/{iata}")
     @Override
     public Response deleteAirport(@PathParam("iata") String iata) {
-        return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    	try {
+            boolean deleted = airportService.deleteAirport(iata);
+            return Response.status(deleted ? Response.Status.OK : Response.Status.NOT_FOUND).build();
+        } catch (NumberFormatException e){
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
 

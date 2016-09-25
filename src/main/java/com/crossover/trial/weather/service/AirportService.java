@@ -4,7 +4,6 @@
 package com.crossover.trial.weather.service;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.AirportData;
@@ -15,6 +14,7 @@ import com.crossover.trial.weather.util.WeatherConstant;
 
 /**
  * @author jdhirendrajoshi
+ * Singleton design pattern implementation for Weather Service
  *
  */
 public enum AirportService {
@@ -136,6 +136,21 @@ public enum AirportService {
         return ad;
     }
 	
+    /**
+     * Remove airport from the list
+     *
+     * @param iataCode 3 letter code
+     * @param latitude in degrees
+     * @param longitude in degrees
+     *
+     */
+    public boolean deleteAirport(String iataCode) {
+        final AirportData airport = WeatherService.INSTANCE.findAirportData(iataCode);
+        if (airport == null) {
+            return false;
+        }
+        return airportData.remove(airport);
+    }
 	
 
 }

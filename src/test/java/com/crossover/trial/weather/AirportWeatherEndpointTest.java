@@ -1,82 +1,123 @@
 package com.crossover.trial.weather;
 
-import com.crossover.trial.weather.model.AtmosphericInformation;
-import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.service.WeatherService;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
+import com.crossover.trial.weather.model.DataPoint;
+import com.crossover.trial.weather.service.WeatherService;
+import com.google.gson.Gson;
 
 public class AirportWeatherEndpointTest {
 
-    private WeatherQueryEndpoint _query = new RestWeatherQueryEndpoint();
+	private static final String BASE_URI = "http://localhost:9090";
 
-    private WeatherCollectorEndpoint _update = new RestWeatherCollectorEndpoint();
+	/** end point for read queries */
+	private WebTarget queryWebTarget;
 
-    private Gson _gson = new Gson();
+	/** end point to supply updates */
+	private WebTarget collectWebTarget;
 
-    private DataPoint _dp;
-    @Before
-    public void setUp() throws Exception {
-        WeatherService.INSTANCE.initFromFile();
-        _dp = new DataPoint.Builder()
-                .withCount(10).withFirst(10).withMedian(20).withLast(30).withMean(22).build();
-        _update.updateWeather("BOS", "wind", _gson.toJson(_dp));
-        _query.weather("BOS", "0").getEntity();
-    }
+	private Gson _gson = new Gson();
 
-    @Test
-    public void testPing() throws Exception {
-        String ping = _query.ping();
-        JsonElement pingResult = new JsonParser().parse(ping);
-        assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
-        assertEquals(5, pingResult.getAsJsonObject().get("iata_freq").getAsJsonObject().entrySet().size());
-    }
+	@Before
+	public void setUp() throws Exception {
+		Client client = ClientBuilder.newClient();
+		queryWebTarget = client.target(BASE_URI).path("query");
+		collectWebTarget = client.target(BASE_URI).path("collect");
+	}
 
-    @Test
-    public void testGet() throws Exception {
-        List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("BOS", "0").getEntity();
-        assertEquals(ais.get(0).getWind(), _dp);
-    }
+	/*
+	 * @Test public void test1() throws Exception { String[] res =
+	 * collectWebTarget.path("airports").request().accept(MediaType.
+	 * APPLICATION_JSON) .get(String[].class); for (String iata : res) {
+	 * collectWebTarget.path("airport").path(iata).request().delete(); }
+	 * 
+	 * res = collectWebTarget.path("airports").request().accept(MediaType.
+	 * APPLICATION_JSON).get(String[].class); assertEquals(10, res.length); }
+	 */
 
-    @Test
-    public void testGetNearby() throws Exception {
-        // check datasize response
-        _update.updateWeather("JFK", "wind", _gson.toJson(_dp));
-        _dp.setMean(40);
-        _update.updateWeather("EWR", "wind", _gson.toJson(_dp));
-        _dp.setMean(30);
-        _update.updateWeather("LGA", "wind", _gson.toJson(_dp));
+	@Test
+	public void test2() throws Exception {
+		BufferedReader br = null;
+		try {
+			URL url = AirportLoader.class.getClassLoader().getResource("airports.dat");
+			br = new BufferedReader(new InputStreamReader(url.openStream()));
 
-        List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("JFK", "200").getEntity();
-        assertEquals(3, ais.size());
-    }
+			// WeatherService.INSTANCE.initFromFile();
 
-    @Test
-    public void testUpdate() throws Exception {
+			InputStream inputStream = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream("airports.dat");
 
-        DataPoint windDp = new DataPoint.Builder()
-                .withCount(10).withFirst(10).withMedian(20).withLast(30).withMean(22).build();
-        _update.updateWeather("BOS", "wind", _gson.toJson(windDp));
-        _query.weather("BOS", "0").getEntity();
+			/*
+			 * AirportLoader al = new AirportLoader(); al.upload(inputStream);
+			 */
+			//WeatherService.INSTANCE.upload(inputStream);
+		} finally {
+			if (br != null) {
+				br.close();
+			}
+		}
 
-        String ping = _query.ping();
-        JsonElement pingResult = new JsonParser().parse(ping);
-        assertEquals(1, pingResult.getAsJsonObject().get("datasize").getAsInt());
+		String[] res = collectWebTarget.path("airports").request().accept(MediaType.APPLICATION_JSON)
+				.get(String[].class);
+		assertEquals(10, res.length);
+	}
 
-        DataPoint cloudCoverDp = new DataPoint.Builder()
-                .withCount(4).withFirst(10).withMedian(60).withLast(100).withMean(50).build();
-        _update.updateWeather("BOS", "cloudcover", _gson.toJson(cloudCoverDp));
+	/*@Test
+	public void test3() throws Exception {
+		Response response = collectWebTarget.path("airport").path("4TW").request().accept(MediaType.APPLICATION_JSON)
+				.get();
+		assertEquals(200, response.getStatus());
 
-        List<AtmosphericInformation> ais = (List<AtmosphericInformation>) _query.weather("BOS", "0").getEntity();
-        assertEquals(ais.get(0).getWind(), windDp);
-        assertEquals(ais.get(0).getCloudCover(), cloudCoverDp);
-    }
+		response = collectWebTarget.path("airport").path("111").request().accept(MediaType.APPLICATION_JSON).get();
+		assertEquals(404, response.getStatus());
+	}
 
+	@Test
+	public void test4() throws Exception {
+		WebTarget path = collectWebTarget.path("weather").path("4TW").path("wind");
+		DataPoint dp = new DataPoint.Builder().withFirst(10.0).withLast(30.0).withMean(22.0).withMedian(20.0)
+				.withCount(10).build();
+		Response response = path.request().post(Entity.entity(dp, "application/json"));
+
+		assertEquals(200, response.getStatus());
+
+		path = collectWebTarget.path("weather").path("111").path("wind");
+		response = path.request().post(Entity.entity(dp, "application/json"));
+
+		assertEquals(422, response.getStatus());
+	}
+
+	@Test
+	public void test5() throws Exception {
+		WebTarget path = queryWebTarget.path("weather").path("4TW").path("0");
+		Response response = path.request().get();
+		assertEquals(200, response.getStatus());
+	}
+
+	@Test
+	public void test6() throws Exception {
+		String[] res = collectWebTarget.path("airports").request().accept(MediaType.APPLICATION_JSON)
+				.get(String[].class);
+		for (String iata : res) {
+			collectWebTarget.path("airport").path(iata).request().delete();
+		}
+
+		res = collectWebTarget.path("airports").request().accept(MediaType.APPLICATION_JSON).get(String[].class);
+		assertEquals(0, res.length);
+	}*/
 }
