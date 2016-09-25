@@ -8,7 +8,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.service.WeatherService;
 
 /**
  * A reference implementation for the weather client. Consumers of the REST API can look at WeatherClient
@@ -57,7 +56,7 @@ public class WeatherClient {
                 .withFirst(first).withLast(last).withMean(mean).withMedian(median).withCount(count)
                 .build();
         Response post = path.request().post(Entity.entity(dp, MediaType.APPLICATION_JSON));
-        System.out.println("data populated");
+        System.out.println("data populated "+post.getStatus());
     }
 
     public void exit() {

@@ -17,12 +17,9 @@ import javax.ws.rs.core.Response;
 
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.AirportData;
-import com.crossover.trial.weather.model.AtmosphericInformation;
 import com.crossover.trial.weather.model.DataPoint;
-import com.crossover.trial.weather.model.DataPointType;
 import com.crossover.trial.weather.service.AirportService;
 import com.crossover.trial.weather.service.WeatherService;
-import com.crossover.trial.weather.util.WeatherConstant;
 import com.google.gson.Gson;
 
 /**

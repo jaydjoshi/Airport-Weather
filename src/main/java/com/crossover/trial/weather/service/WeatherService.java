@@ -13,10 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-
-import com.crossover.trial.weather.AirportLoader;
 import com.crossover.trial.weather.exception.WeatherException;
 import com.crossover.trial.weather.model.Airport;
 import com.crossover.trial.weather.model.AirportData;
@@ -211,10 +207,8 @@ public enum WeatherService {
         String l = null;
         String[] strArr = null;
         Airport airport = null;
-        String path = null;
-        
         while ((l = reader.readLine()) != null) {
-            //break;
+            
         	strArr = new String[11];
         	airport = new Airport();
         	strArr = l.split(",");
