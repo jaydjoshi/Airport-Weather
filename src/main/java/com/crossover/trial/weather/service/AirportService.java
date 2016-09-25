@@ -39,8 +39,11 @@ public enum AirportService {
     public void addDataPoint(String iataCode, String pointType, DataPoint dp) throws WeatherException {
     	try{
 	        int airportDataIdx = WeatherService.INSTANCE.getAirportDataIdx(iataCode);
-	        AtmosphericInformation ai = atmosphericInformation.get(airportDataIdx);
-	        updateAtmosphericInformation(ai, pointType, dp);
+	        if(null != atmosphericInformation && atmosphericInformation.size()>0)
+	        {
+		        AtmosphericInformation ai = atmosphericInformation.get(airportDataIdx);
+		        updateAtmosphericInformation(ai, pointType, dp);
+	        }
 	    }catch (WeatherException e) {
         	//LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw new WeatherException(DataPointType.valueOf(pointType.toUpperCase()), e.getMessage(), e);

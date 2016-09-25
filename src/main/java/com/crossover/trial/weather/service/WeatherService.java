@@ -178,7 +178,7 @@ public enum WeatherService {
     }
     
     
-    /*public void initFromFile() throws WeatherException {
+    public void initFromFile() throws WeatherException {
     	airportData.clear();
     	atmosphericInformation.clear();
     	requestFrequency.clear();
@@ -248,5 +248,5 @@ public enum WeatherService {
     	airport.setDst(strArr[10]);
     	
 		return;
-	}*/
+	}
 }

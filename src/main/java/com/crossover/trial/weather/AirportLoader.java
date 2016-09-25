@@ -88,7 +88,7 @@ public class AirportLoader {
 
 	public static void main(String args[]) throws IOException{
                 
-        //args = airports.dat
+        //args is filename = airports.dat
         InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(args[0]);
         
         if(inputStream==null){
