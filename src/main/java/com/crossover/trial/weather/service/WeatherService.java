@@ -220,7 +220,6 @@ public enum WeatherService {
         	try {
 				addAirport(airport.getIata(),Double.valueOf(airport.getLatitude()),Double.valueOf(airport.getLongitude()));
 			} catch (NumberFormatException | WeatherException e) {
-				// TODO Auto-generated catch block
 				throw new WeatherException(e);
 			}
         	
@@ -229,7 +228,7 @@ public enum WeatherService {
     }
 
     public void populateAirportData(String[] strArr, Airport airport) {
-		// TODO Auto-generated method stub
+		
     	if(strArr==null || strArr.length==0)
     		return;
     	

@@ -2,10 +2,6 @@ package com.crossover.trial.weather.util;
 
 public final class WeatherConstant {
 	
-	//URL
-	public static final String QUERY_URL= "http://localhost:8080/query";
-	public static final String COLLECT_URL="http://localhost:8080/collect";
-	
 	//limits
 	public static final double WIND_LOWER_LIMIT = 0;
 	public static final double TEMPERATURE_LOWER_LIMIT = -50;
