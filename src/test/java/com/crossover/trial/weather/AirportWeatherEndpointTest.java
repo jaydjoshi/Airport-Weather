@@ -34,6 +34,14 @@ public class AirportWeatherEndpointTest {
         _query.weather("BOS", "0").getEntity();
     
 	}
+	
+	@Test
+	public void pingCollector() throws Exception{
+		Response response = _collect.ping();
+		assertEquals(200, response.getStatus());
+	}
+	
+	
 
 	@Test
 	public void testInitFromFileSize() throws Exception {
@@ -42,6 +50,7 @@ public class AirportWeatherEndpointTest {
 		
 		assertEquals(10, retval.size());
 	}
+	
 	
 	
 	@Test
@@ -69,7 +78,13 @@ public class AirportWeatherEndpointTest {
 		
 		assertEquals(406, response.getStatus());
 		
+		response =(Response) _collect.getAirport("BOM");
+		
+		assertEquals(200, response.getStatus());
+		
 	}
+	
+	
 	
 	@Test
 	public void testDeleteAllAirport() throws Exception {
