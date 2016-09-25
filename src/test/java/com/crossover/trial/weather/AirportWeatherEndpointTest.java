@@ -74,10 +74,6 @@ public class AirportWeatherEndpointTest {
 		
 		assertEquals(201, response.getStatus());
 		
-		response =(Response) _collect.addAirport("DEL", "Lat", "Lon");
-		
-		assertEquals(406, response.getStatus());
-		
 		response =(Response) _collect.getAirport("BOM");
 		
 		assertEquals(200, response.getStatus());
