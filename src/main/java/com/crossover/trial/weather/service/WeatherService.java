@@ -45,9 +45,6 @@ public enum WeatherService {
     private Map<Double, Integer> radiusFreq = new HashMap<Double, Integer>();
     
     
-    
-    
-    
     /**
 	 * @return the airportData
 	 */
