@@ -35,5 +35,5 @@ public interface WeatherQueryEndpoint {
      * airports in the given radius
      */
     
-    Response weather(@PathParam("iata") String iata, @PathParam("radius") String radiusString);
+    Response weather(String iata,  String radiusString);
 }

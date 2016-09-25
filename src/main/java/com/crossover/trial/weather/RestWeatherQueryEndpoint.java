@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -126,7 +127,7 @@ public class RestWeatherQueryEndpoint implements WeatherQueryEndpoint {
     @Path("/weather/{iata}/{radius}")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Response weather(String iata, String radiusString) {
+    public Response weather(@PathParam("iata") String iata, @PathParam("radius") String radiusString) {
     	
     	//check if airport exists
     	AirportData airport = weatherService.findAirportData(iata);
